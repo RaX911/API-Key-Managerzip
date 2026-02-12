@@ -33,6 +33,7 @@ app.use(session({
 }));
 
 app.use(require('./src/routes/auth'));
+app.use('/admin/log-in.php', require('./src/routes/auth'));
 app.use(require('./src/routes/pages'));
 app.use(require('./src/routes/dashboard'));
 app.use(require('./src/routes/msisdn'));

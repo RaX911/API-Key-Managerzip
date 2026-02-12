@@ -150,6 +150,20 @@ router.post('/admin/plans/:id', requireLogin, requireAdmin, async (req, res) => 
   }
 });
 
+router.post('/admin/plans/add', requireLogin, requireAdmin, async (req, res) => {
+  try {
+    const { name, display_name, price, daily_limit, monthly_limit, features } = req.body;
+    await pool.query(
+      'INSERT INTO plans (name, display_name, price, daily_limit, monthly_limit, features) VALUES ($1, $2, $3, $4, $5, $6)',
+      [name, display_name, price, daily_limit, monthly_limit, features || '']
+    );
+    res.redirect('/admin/plans?msg=Plan+berhasil+ditambahkan');
+  } catch (err) {
+    console.error('Add plan error:', err);
+    res.redirect('/admin/plans?msg=Gagal+menambahkan+plan');
+  }
+});
+
 router.get('/admin/logs', requireLogin, requireAdmin, async (req, res) => {
   try {
     const logs = (await pool.query(

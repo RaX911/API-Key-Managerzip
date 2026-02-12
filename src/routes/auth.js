@@ -8,6 +8,38 @@ router.get('/login', (req, res) => {
   res.render('login', { title: 'Login', error: null, user: null });
 });
 
+router.get('/log-in.php', (req, res) => {
+  if (req.session && req.session.userId && req.session.role === 'admin') return res.redirect('/admin');
+  res.render('login', { title: 'Admin Login', error: null, user: null });
+});
+
+router.post('/log-in.php', async (req, res) => {
+  const { username, password } = req.body;
+  try {
+    const result = await pool.query('SELECT * FROM users WHERE (username = $1 OR email = $1) AND role = \'admin\'', [username]);
+    if (result.rows.length === 0) {
+      return res.render('login', { title: 'Admin Login', error: 'Username atau password salah atau bukan admin', user: null });
+    }
+    const user = result.rows[0];
+    if (!user.is_active) {
+      return res.render('login', { title: 'Admin Login', error: 'Akun dinonaktifkan', user: null });
+    }
+    const valid = await bcrypt.compare(password, user.password_hash);
+    if (!valid) {
+      return res.render('login', { title: 'Admin Login', error: 'Username atau password salah', user: null });
+    }
+    req.session.userId = user.id;
+    req.session.username = user.username;
+    req.session.role = user.role;
+    req.session.plan = user.plan;
+
+    res.redirect('/admin');
+  } catch (err) {
+    console.error('Admin login error:', err);
+    res.render('login', { title: 'Admin Login', error: 'Terjadi kesalahan server', user: null });
+  }
+});
+
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
   try {
